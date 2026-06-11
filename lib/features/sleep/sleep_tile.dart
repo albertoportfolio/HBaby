@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
 
 class SleepTile extends StatelessWidget {
@@ -17,7 +18,7 @@ class SleepTile extends StatelessWidget {
 
     String durationText;
     if (isActive) {
-      durationText = DateFormatter.elapsed(entry.startTime);
+      durationText = DateFormatter.elapsed(context, entry.startTime);
     } else {
       final dur = entry.endTime!.difference(entry.startTime);
       durationText = DateFormatter.formatDuration(dur);
@@ -26,7 +27,7 @@ class SleepTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: isActive
             ? Border.all(color: accentColor.withValues(alpha: 0.5), width: 2)
@@ -57,7 +58,7 @@ class SleepTile extends StatelessWidget {
         title: Row(
           children: [
             Text(
-              DateFormatter.formatDateTime(entry.startTime),
+              DateFormatter.formatDateTime(context, entry.startTime),
               style: theme.textTheme.titleMedium,
             ),
             if (isActive) ...[
@@ -69,7 +70,7 @@ class SleepTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Durmiendo',
+                  context.l10n.sleepingBadge,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: accentColor,
                     fontWeight: FontWeight.w600,
@@ -85,7 +86,8 @@ class SleepTile extends StatelessWidget {
             const SizedBox(height: 2),
             if (entry.endTime != null)
               Text(
-                'Fin: ${DateFormatter.formatDateTime(entry.endTime!)}',
+                context.l10n.endPrefix(
+                    DateFormatter.formatDateTime(context, entry.endTime!)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.outline,
                 ),

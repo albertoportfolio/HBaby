@@ -4,7 +4,7 @@ Guía para Claude Code al trabajar en este repositorio.
 
 ## Proyecto
 
-App Flutter ("Baby Tracker") para gestionar el crecimiento de un bebé: registros de sueño, tomas de leche/comida y medidas (peso). Todo se almacena **en local** en el móvil con SQLite (Drift). No hay backend ni red. La UI está en **español**.
+App Flutter ("Baby Tracker") para gestionar el crecimiento de un bebé: registros de sueño, tomas de leche/comida y medidas (peso). Todo se almacena **en local** en el móvil con SQLite (Drift). No hay backend ni red. La UI es **multi-idioma** (español e inglés) vía `gen-l10n`; el español es el idioma de respaldo.
 
 ## Comandos
 
@@ -23,7 +23,8 @@ flutter test                                     # tests
 - **Estado:** `flutter_riverpod` (providers clásicos, sin codegen).
 - **Navegación:** `go_router` con `StatefulShellRoute.indexedStack` (bottom nav de 4 pestañas).
 - **Base de datos:** `drift` + `sqlite3_flutter_libs`. Archivo `baby_tracker.sqlite` en el directorio de documentos de la app (`path_provider`).
-- **Tipografía:** `google_fonts` (Poppins). **Fechas:** `intl` con locale `es`. **IDs:** `uuid` v4 (TextColumn como primary key).
+- **Tipografía:** `google_fonts` (Poppins). **Fechas:** `intl` con el locale activo. **IDs:** `uuid` v4 (TextColumn como primary key).
+- **i18n:** `flutter_localizations` + `gen-l10n`. Cadenas en `lib/l10n/app_en.arb` (plantilla) y `app_es.arb`; el código generado vive en `lib/l10n/app_localizations*.dart` (no editar a mano; se regenera con `flutter gen-l10n` o al compilar). Acceso vía la extensión `context.l10n` (`core/utils/l10n_extension.dart`).
 
 ## Arquitectura
 
@@ -65,7 +66,8 @@ lib/
 
 ### Convenciones de UI
 
-- Textos visibles al usuario en español; código y comentarios en inglés.
+- Nunca textos visibles "hardcodeados": toda cadena de UI va en los dos `.arb` y se usa con `context.l10n.<clave>`. Código y comentarios en inglés.
+- `DateFormatter` recibe `BuildContext` en los métodos que producen texto localizado (`formatRelativeDate`, `getAge`, `elapsed`, `formatWeight`, formatos de fecha). Los enums `FeedingType`/`BabyGender` exponen `label(context)`.
 - Usar el tema (`Theme.of(context)`), `AppTheme` y los widgets compartidos (`EmptyState`, `LoadingWidget`, tiles) antes de crear estilos ad-hoc.
 - Color de acento del sueño: `Color(0xFF7C83FD)`.
 - Formularios de alta: `SingleChildScrollView` con padding 24, secciones con `titleMedium`, botón de guardado con spinner mientras `_isSaving`.

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/l10n_extension.dart';
+
 enum BabyGender {
   male,
   female,
   other;
 
-  String get label {
+  String label(BuildContext context) {
+    final l10n = context.l10n;
     switch (this) {
       case BabyGender.male:
-        return 'Niño';
+        return l10n.genderBoy;
       case BabyGender.female:
-        return 'Niña';
+        return l10n.genderGirl;
       case BabyGender.other:
-        return 'Otro';
+        return l10n.genderOther;
     }
   }
 

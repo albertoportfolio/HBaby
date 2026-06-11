@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/empty_state.dart';
+import '../../../core/utils/l10n_extension.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../database/app_database.dart';
 import '../sleep_provider.dart';
@@ -65,20 +66,14 @@ class SleepScreen extends ConsumerWidget {
                         Icon(
                           Icons.bedtime_outlined,
                           size: 60,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.35),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
                         ),
                         const SizedBox(height: 20),
                         Text(
                           'Hay un sueño en curso. Termina la sesión desde el banner superior.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.75),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
                               ),
                         ),
                       ],
@@ -89,7 +84,8 @@ class SleepScreen extends ConsumerWidget {
                 // Group by day
                 final grouped = <String, List<SleepEntry>>{};
                 for (final e in finished) {
-                  final key = DateFormatter.formatRelativeDate(e.startTime);
+                  final key =
+                      DateFormatter.formatRelativeDate(context, e.startTime);
                   grouped.putIfAbsent(key, () => []).add(e);
                 }
 
@@ -104,25 +100,12 @@ class SleepScreen extends ConsumerWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                day,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color:
-                                          Theme.of(context).colorScheme.outline,
+                          child: Text(
+                            day,
+                            style:
+                                Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      color: Theme.of(context).colorScheme.outline,
                                     ),
-                              ),
-                              Text(
-                                _daySummary(items),
-                                style:
-                                    Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
                           ),
                         ),
                         ...items.map(
@@ -141,16 +124,6 @@ class SleepScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  /// e.g. '3 siestas · 4h 20min'
-  String _daySummary(List<SleepEntry> items) {
-    var total = Duration.zero;
-    for (final e in items) {
-      total += e.endTime!.difference(e.startTime);
-    }
-    return '${items.length} ${items.length == 1 ? "siesta" : "siestas"} · '
-        '${DateFormatter.formatDuration(total)}';
   }
 
   Future<void> _delete(BuildContext ctx, WidgetRef ref, String id) async {
@@ -209,11 +182,11 @@ class _ActiveSleepBanner extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Durmiendo ahora',
+                  context.l10n.sleepingNow,
                   style: theme.textTheme.titleMedium?.copyWith(color: color),
                 ),
                 Text(
-                  DateFormatter.elapsed(active.startTime),
+                  DateFormatter.elapsed(context, active.startTime),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: color.withValues(alpha: 0.8)),
                 ),

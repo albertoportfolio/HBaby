@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
 import '../baby_gender.dart';
 
@@ -35,7 +36,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
       initialDate: _selectedDate ?? now,
       firstDate: DateTime(now.year - 5),
       lastDate: now,
-      helpText: 'Fecha de nacimiento',
+      helpText: context.l10n.birthDateLabel,
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }
@@ -44,7 +45,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona la fecha de nacimiento')),
+        SnackBar(content: Text(context.l10n.selectBirthDate)),
       );
       return;
     }
@@ -66,7 +67,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(content: Text(context.l10n.saveError('$e'))),
         );
       }
     } finally {
@@ -77,10 +78,11 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nuevo bebé'),
+        title: Text(l10n.newBabyTitle),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -109,18 +111,18 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                 const SizedBox(height: 32),
 
                 // Name
-                Text('Nombre', style: theme.textTheme.titleMedium),
+                Text(l10n.nameLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    hintText: 'Nombre del bebé',
-                    prefixIcon: Icon(Icons.badge_outlined),
+                  decoration: InputDecoration(
+                    hintText: l10n.nameHint,
+                    prefixIcon: const Icon(Icons.badge_outlined),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return 'El nombre es obligatorio';
+                      return l10n.nameRequired;
                     }
                     return null;
                   },
@@ -128,19 +130,19 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                 const SizedBox(height: 24),
 
                 // Birth date
-                Text('Fecha de nacimiento', style: theme.textTheme.titleMedium),
+                Text(l10n.birthDateLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(14),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.cake_outlined),
-                      hintText: 'Seleccionar fecha',
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.cake_outlined),
+                      hintText: l10n.selectDate,
                     ),
                     child: Text(
                       _selectedDate == null
-                          ? 'Seleccionar fecha'
+                          ? l10n.selectDate
                           : '${_selectedDate!.day.toString().padLeft(2, '0')}/'
                               '${_selectedDate!.month.toString().padLeft(2, '0')}/'
                               '${_selectedDate!.year}',
@@ -155,7 +157,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                 const SizedBox(height: 24),
 
                 // Gender
-                Text('Género', style: theme.textTheme.titleMedium),
+                Text(l10n.genderLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 12),
                 Row(
                   children: BabyGender.values.map((g) {
@@ -171,12 +173,13 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                             decoration: BoxDecoration(
                               color: selected
                                   ? g.color.withValues(alpha: 0.15)
-                                  : Colors.white,
+                                  : theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: selected
                                     ? g.color
-                                    : const Color(0xFFE8E8E8),
+                                    : theme.dividerTheme.color ??
+                                        const Color(0xFFE8E8E8),
                                 width: selected ? 2 : 1,
                               ),
                             ),
@@ -190,7 +193,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  g.label,
+                                  g.label(context),
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: selected ? g.color : null,
                                     fontWeight: selected
@@ -220,7 +223,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Guardar bebé'),
+                      : Text(l10n.saveBaby),
                 ),
               ],
             ),

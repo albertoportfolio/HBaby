@@ -1,34 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/l10n_extension.dart';
+
 enum FeedingType {
   breastLeft,
   breastRight,
   bottleFormula,
   bottleBreastMilk;
 
-  String get label {
+  String label(BuildContext context) {
+    final l10n = context.l10n;
     switch (this) {
       case FeedingType.breastLeft:
-        return 'Pecho izquierdo';
+        return l10n.feedingBreastLeft;
       case FeedingType.breastRight:
-        return 'Pecho derecho';
+        return l10n.feedingBreastRight;
       case FeedingType.bottleFormula:
-        return 'Biberón – fórmula';
+        return l10n.feedingBottleFormula;
       case FeedingType.bottleBreastMilk:
-        return 'Biberón – leche materna';
+        return l10n.feedingBottleBreastMilk;
     }
   }
 
-  String get shortLabel {
+  String shortLabel(BuildContext context) {
+    final l10n = context.l10n;
     switch (this) {
       case FeedingType.breastLeft:
-        return 'Pecho izq.';
+        return l10n.feedingBreastLeftShort;
       case FeedingType.breastRight:
-        return 'Pecho der.';
+        return l10n.feedingBreastRightShort;
       case FeedingType.bottleFormula:
-        return 'Fórmula';
+        return l10n.feedingFormulaShort;
       case FeedingType.bottleBreastMilk:
-        return 'L. materna';
+        return l10n.feedingBreastMilkShort;
     }
   }
 

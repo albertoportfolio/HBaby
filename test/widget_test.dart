@@ -7,8 +7,10 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_babynanny/app/app.dart';
+import 'package:flutter_babynanny/core/settings/settings_provider.dart';
 import 'package:flutter_babynanny/database/app_database.dart';
 
 void main() {
@@ -16,10 +18,15 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
 
     final database = AppDatabase();
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [databaseProvider.overrideWithValue(database)],
+        overrides: [
+          databaseProvider.overrideWithValue(database),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
         child: const BabyTrackerApp(),
       ),
     );

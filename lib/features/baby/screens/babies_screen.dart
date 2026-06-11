@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/selected_baby_provider.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/l10n_extension.dart';
 import '../../../core/utils/empty_state.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../database/app_database.dart';
@@ -17,10 +18,11 @@ class BabiesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final babiesAsync = ref.watch(babiesProvider);
     final selectedId = ref.watch(selectedBabyIdProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis bebés'),
+        title: Text(l10n.myBabies),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
@@ -32,14 +34,14 @@ class BabiesScreen extends ConsumerWidget {
       ),
       body: babiesAsync.when(
         loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(l10n.errorLabel('$e'))),
         data: (babies) {
           if (babies.isEmpty) {
             return EmptyState(
               icon: Icons.child_care_rounded,
-              title: 'Sin bebés registrados',
-              subtitle: 'Añade tu primer bebé para empezar a registrar su información.',
-              actionLabel: 'Añadir bebé',
+              title: l10n.babiesEmptyTitle,
+              subtitle: l10n.babiesEmptySubtitle,
+              actionLabel: l10n.addBabyAction,
               onAction: () => context.push('/babies/add'),
             );
           }
@@ -71,7 +73,7 @@ class _BabyCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: isSelected
             ? Border.all(color: theme.colorScheme.primary, width: 2)
@@ -94,7 +96,7 @@ class _BabyCard extends ConsumerWidget {
         ),
         title: Text(baby.name, style: theme.textTheme.titleMedium),
         subtitle: Text(
-          DateFormatter.getAge(baby.birthDate),
+          DateFormatter.getAge(context, baby.birthDate),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -122,23 +124,21 @@ class _BabyCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar bebé'),
-        content: Text(
-          '¿Estás seguro de que quieres eliminar a ${baby.name}? '
-          'Se borrarán todos sus registros.',
-        ),
+        title: Text(l10n.deleteBabyTitle),
+        content: Text(l10n.deleteBabyMessage(baby.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Eliminar'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

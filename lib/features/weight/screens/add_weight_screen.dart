@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
 import '../../baby/providers/baby_provider.dart';
 
@@ -36,7 +37,7 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
       initialDate: _measuredAt,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
-      helpText: 'Fecha de la medición',
+      helpText: context.l10n.measurementDateLabel,
     );
     if (date == null || !mounted) return;
 
@@ -54,11 +55,11 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final baby = ref.read(selectedBabyProvider);
     if (baby == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Selecciona un bebé antes de guardar el peso')),
+        SnackBar(content: Text(l10n.selectBabyFirst)),
       );
       return;
     }
@@ -87,7 +88,7 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(content: Text(l10n.saveError('$e'))),
         );
       }
     } finally {
@@ -104,9 +105,10 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Añadir peso')),
+      appBar: AppBar(title: Text(l10n.addWeightTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -116,7 +118,7 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Weight
-                Text('Peso (kg)', style: theme.textTheme.titleMedium),
+                Text(l10n.weightKgLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _weightController,
@@ -125,22 +127,22 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
                   ],
-                  decoration: const InputDecoration(
-                    hintText: 'ej. 4,250',
+                  decoration: InputDecoration(
+                    hintText: l10n.weightHint,
                     suffixText: 'kg',
-                    prefixIcon: Icon(Icons.monitor_weight_outlined),
+                    prefixIcon: const Icon(Icons.monitor_weight_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Introduce un peso';
+                      return l10n.enterWeight;
                     }
                     final parsed =
                         double.tryParse(value.trim().replaceAll(',', '.'));
                     if (parsed == null || parsed <= 0) {
-                      return 'Introduce un peso válido en kg';
+                      return l10n.invalidWeight;
                     }
                     if (parsed > 30) {
-                      return 'El peso parece demasiado alto';
+                      return l10n.weightTooHigh;
                     }
                     return null;
                   },
@@ -148,7 +150,8 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
                 const SizedBox(height: 24),
 
                 // Date & time
-                Text('Fecha de la medición', style: theme.textTheme.titleMedium),
+                Text(l10n.measurementDateLabel,
+                    style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: _pickDateTime,
@@ -164,13 +167,12 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
                 const SizedBox(height: 24),
 
                 // Notes
-                Text('Notas (opcional)', style: theme.textTheme.titleMedium),
+                Text(l10n.notesLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _notesController,
                   maxLines: 3,
-                  decoration:
-                      const InputDecoration(hintText: 'Observaciones...'),
+                  decoration: InputDecoration(hintText: l10n.notesHint),
                 ),
                 const SizedBox(height: 40),
 
@@ -185,7 +187,7 @@ class _AddWeightScreenState extends ConsumerState<AddWeightScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Guardar peso'),
+                      : Text(l10n.saveWeight),
                 ),
               ],
             ),

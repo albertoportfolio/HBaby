@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/l10n_extension.dart';
+
 class HomeScreen extends StatelessWidget {
   final StatefulNavigationShell shell;
 
   const HomeScreen({required this.shell, super.key});
 
-  static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Inicio'),
-    NavigationDestination(icon: Icon(Icons.local_drink_rounded), label: 'Alimentación'),
-    NavigationDestination(icon: Icon(Icons.bedtime_rounded), label: 'Sueño'),
-    NavigationDestination(icon: Icon(Icons.monitor_weight_rounded), label: 'Peso'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       body: shell,
       bottomNavigationBar: NavigationBar(
@@ -22,7 +19,24 @@ class HomeScreen extends StatelessWidget {
         onDestinationSelected: (index) {
           shell.goBranch(index, initialLocation: true);
         },
-        destinations: _destinations,
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_rounded),
+            label: l10n.navHome,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.local_drink_rounded),
+            label: l10n.navFeedings,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.bedtime_rounded),
+            label: l10n.navSleep,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.monitor_weight_rounded),
+            label: l10n.navWeight,
+          ),
+        ],
       ),
     );
   }

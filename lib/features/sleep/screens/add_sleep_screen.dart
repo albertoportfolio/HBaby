@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
 import '../../baby/providers/baby_provider.dart';
 
@@ -89,24 +90,25 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
 
   Future<void> _save() async {
     _durationTimer?.cancel();
+    final l10n = context.l10n;
     final baby = ref.read(selectedBabyProvider);
     if (baby == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona un bebé antes de guardar el sueño')),
+        SnackBar(content: Text(l10n.selectBabyFirst)),
       );
       return;
     }
 
     if (!_isOngoing && _endTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Indica la hora de fin o activa "sueño en curso"')),
+        SnackBar(content: Text(l10n.endTimeRequired)),
       );
       return;
     }
 
     if (!_isOngoing && _endTime != null && _endTime!.isBefore(_startTime)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La hora de fin debe ser posterior a la hora de inicio')),
+        SnackBar(content: Text(l10n.endAfterStart)),
       );
       return;
     }
@@ -122,10 +124,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
         if (active != null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                    'Ya hay un sueño en curso. Detenlo antes de iniciar otro.'),
-              ),
+              SnackBar(content: Text(l10n.activeSleepExists)),
             );
             setState(() => _isSaving = false);
           }
@@ -148,7 +147,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(l10n.errorLabel('$e'))),
         );
       }
     } finally {
@@ -165,10 +164,11 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     const color = Color(0xFF7C83FD);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar sueño')),
+      appBar: AppBar(title: Text(l10n.addSleepTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -179,18 +179,23 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _isOngoing ? color.withValues(alpha: 0.08) : Colors.white,
+                  color: _isOngoing
+                      ? color.withValues(alpha: 0.08)
+                      : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: _isOngoing ? color : const Color(0xFFE8E8E8),
+                    color: _isOngoing
+                        ? color
+                        : theme.dividerTheme.color ?? const Color(0xFFE8E8E8),
                   ),
                 ),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _isOngoing,
                   activeThumbColor: color,
-                  title: Text('Sueño en curso', style: theme.textTheme.titleMedium),
-                  subtitle: const Text('El bebé está durmiendo ahora mismo'),
+                  title: Text(l10n.ongoingSleepLabel,
+                      style: theme.textTheme.titleMedium),
+                  subtitle: Text(l10n.ongoingSleepSubtitle),
                   onChanged: (v) {
                     setState(() {
                       _isOngoing = v;
@@ -209,7 +214,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
               const SizedBox(height: 24),
 
               // Start time
-              Text('Hora de inicio', style: theme.textTheme.titleMedium),
+              Text(l10n.startTimeLabel, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               InkWell(
                 onTap: _pickStart,
@@ -224,7 +229,8 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
               if (_isOngoing) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Duración en curso: ${_formatDuration(DateTime.now().difference(_startTime))}',
+                  l10n.ongoingDurationLabel(
+                      _formatDuration(DateTime.now().difference(_startTime))),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: color, fontWeight: FontWeight.w600),
                 ),
@@ -233,7 +239,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
 
               // End time
               if (!_isOngoing) ...[
-                Text('Hora de fin', style: theme.textTheme.titleMedium),
+                Text(l10n.endTimeLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: _pickEnd,
@@ -243,7 +249,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
                       prefixIcon: Icon(Icons.stop_rounded),
                     ),
                     child: Text(
-                      _endTime != null ? _fmt(_endTime!) : 'Seleccionar hora de fin',
+                      _endTime != null ? _fmt(_endTime!) : l10n.selectEndTime,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: _endTime == null
                             ? theme.colorScheme.outline
@@ -255,8 +261,8 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
                 if (_endTime != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Duración: ${_endTime!.difference(_startTime).inHours}h '
-                    '${_endTime!.difference(_startTime).inMinutes % 60}min',
+                    l10n.durationValue(
+                        _formatDuration(_endTime!.difference(_startTime))),
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: color, fontWeight: FontWeight.w600),
                   ),
@@ -265,12 +271,12 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
               ],
 
               // Notes
-              Text('Notas (opcional)', style: theme.textTheme.titleMedium),
+              Text(l10n.notesLabel, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(hintText: 'Observaciones...'),
+                decoration: InputDecoration(hintText: l10n.notesHint),
               ),
               const SizedBox(height: 40),
 
@@ -285,7 +291,7 @@ class _AddSleepScreenState extends ConsumerState<AddSleepScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Text(_isOngoing ? 'Iniciar registro' : 'Guardar sueño'),
+                    : Text(_isOngoing ? l10n.startRecording : l10n.saveSleep),
               ),
             ],
           ),

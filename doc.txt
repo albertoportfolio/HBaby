@@ -1,0 +1,265 @@
+================================================================================
+                     BHealth - DOCUMENTACION DEL PROYECTO
+================================================================================
+
+1. ¿QUE ES ESTA APP?
+--------------------------------------------------------------------------------
+BHealth es una aplicacion Flutter para gestionar el crecimiento de un bebe:
+- Registros de tomas (pecho o biberon)
+- Sesiones de sueño (con cronometro de "sueño en curso")
+- Medidas de peso
+- Gestion de varios bebes (multi-perfil)
+
+Todo se guarda EN LOCAL en el movil con SQLite (a traves de la libreria Drift).
+No hay backend, ni API, ni conexion a internet. La interfaz esta en español.
+
+2. STACK TECNOLOGICO
+--------------------------------------------------------------------------------
+- flutter_riverpod  -> gestion de estado (providers clasicos, sin codegen)
+- go_router         -> navegacion (StatefulShellRoute con bottom nav de 4 pestañas)
+- drift             -> ORM sobre SQLite (genera codigo *.g.dart con build_runner)
+- sqlite3_flutter_libs -> binarios nativos de SQLite para Android/iOS
+- path_provider     -> obtiene el directorio de documentos de la app
+- google_fonts      -> tipografia Poppins
+- intl              -> formato de fechas en locale 'es'
+- uuid              -> IDs unicos (UUID v4) como clave primaria de texto
+
+3. ESTRUCTURA DE CARPETAS
+--------------------------------------------------------------------------------
+lib/
+├── main.dart                  Punto de entrada: inicializa intl 'es', crea la
+│                              base de datos y la inyecta via ProviderScope.
+├── app/
+│   ├── app.dart               MaterialApp.router (conecta tema + router)
+│   ├── router.dart            GoRouter: rutas, shell de 4 pestañas, redirect
+│   └── theme.dart             Tema Material 3 con paleta pastel
+├── core/
+│   ├── utils/                 DateFormatter, selectedBabyIdProvider, EmptyState
+│   └── widgets/               LoadingWidget
+├── database/
+│   ├── app_database.dart      @DriftDatabase, conexion al fichero SQLite,
+│   │                          schemaVersion y databaseProvider
+│   ├── tables/                Definicion de tablas: Babies, Feedings,
+│   │                          SleepEntries, WeightEntries
+│   └── daos/                  Un DAO por tabla (consultas + streams watch*)
+└── features/<feature>/        Una carpeta por funcionalidad (baby, feeding,
+    ├── screens/               sleep, weight, home): pantalla de lista +
+    ├── providers              pantalla de alta (add_*), providers y widgets
+    └── widgets/tiles/enums    (FeedingType, BabyGender, tiles...)
+
+4. FLUJO DE LA APLICACION PASO A PASO
+--------------------------------------------------------------------------------
+
+PASO 1 - Arranque (lib/main.dart)
+  1. WidgetsFlutterBinding.ensureInitialized()
+  2. initializeDateFormatting('es') -> habilita fechas en español
+  3. Se crea AppDatabase() (todavia NO abre el fichero: usa LazyDatabase,
+     se abre en la primera consulta)
+  4. runApp() envuelve la app en ProviderScope y SOBREESCRIBE el
+     databaseProvider con la instancia real:
+        databaseProvider.overrideWithValue(database)
+     Asi cualquier provider/pantalla accede a la BD con
+     ref.watch(databaseProvider) sin singletons globales.
+
+PASO 2 - Apertura de la base de datos (lib/database/app_database.dart)
+  1. La primera consulta dispara LazyDatabase:
+     - getApplicationDocumentsDirectory() (path_provider) da la carpeta
+       privada de documentos de la app en el movil
+     - Se abre/crea el fichero "baby_tracker.sqlite" alli
+     - NativeDatabase.createInBackground() lo ejecuta en un isolate aparte
+       para no bloquear la UI
+  2. MigrationStrategy:
+     - onCreate: crea todas las tablas la primera vez
+     - onUpgrade: migraciones futuras (al subir schemaVersion)
+     - beforeOpen: PRAGMA foreign_keys = ON (activa borrado en cascada)
+
+PASO 3 - Navegacion inicial (lib/app/router.dart)
+  1. routerProvider construye el GoRouter y observa babiesProvider
+     (stream de todos los bebes de la BD).
+  2. REDIRECT: si la lista de bebes ya cargo y esta VACIA, se redirige
+     automaticamente a /babies/add -> el usuario debe crear el primer bebe.
+  3. Si hay bebes, se entra al shell principal con bottom nav de 4 pestañas:
+        0 /home      Dashboard (resumen del dia)
+        1 /feedings  Tomas
+        2 /sleep     Sueño
+        3 /weight    Peso
+     Cada pestaña tiene una subruta "add" (ej. /feedings/add) para crear
+     un registro nuevo.
+
+PASO 4 - Seleccion de bebe (core/utils + features/baby/providers)
+  1. selectedBabyIdProvider (StateProvider<String?>) guarda el ID del bebe
+     activo. Null = sin seleccion explicita.
+  2. selectedBabyProvider lo resuelve: si no hay seleccion (o el ID ya no
+     existe), cae al PRIMER bebe de la lista.
+  3. TODOS los providers de datos dependen de el. Si el usuario cambia de
+     bebe, Riverpod invalida la cadena y todas las pantallas se refrescan
+     solas con los datos del nuevo bebe.
+
+PASO 5 - Lectura reactiva de datos (el patron central)
+  Cadena de dependencias, ejemplo con tomas:
+
+     UI (FeedingScreen)
+        └── ref.watch(feedingsProvider)            StreamProvider
+              ├── ref.watch(selectedBabyProvider)   bebe activo
+              └── db.feedingsDao.watchFeedingsByBaby(baby.id)
+                    └── SELECT * FROM feedings
+                        WHERE baby_id = ? ORDER BY start_time DESC
+                        (como STREAM de Drift)
+
+  - Los metodos watch* de los DAOs devuelven Stream<List<T>>: Drift
+    re-emite la consulta automaticamente cada vez que la tabla cambia.
+  - La pantalla consume el stream con .when(loading/error/data):
+       loading -> LoadingWidget
+       error   -> mensaje de error
+       data    -> lista agrupada por dia ('Hoy', 'Ayer', fecha) usando
+                  DateFormatter.formatRelativeDate
+  - Lo mismo aplica a sleepEntriesProvider y weightEntriesProvider.
+
+PASO 6 - Escritura de datos (pantallas add_*)
+  1. El usuario pulsa el boton "+" -> navega a /<feature>/add.
+  2. Rellena el formulario (SingleChildScrollView, validacion local).
+  3. Al guardar:
+     - Se genera un id con const Uuid().v4()
+     - Se construye un Companion de Drift (ej. FeedingsCompanion) con los
+       valores del formulario
+     - Se llama al DAO: db.feedingsDao.insertFeeding(companion)
+     - Mientras tanto _isSaving=true muestra un spinner en el boton
+  4. Drift hace el INSERT en SQLite y NOTIFICA a todos los streams que
+     observan esa tabla -> la pantalla de lista se actualiza sola, sin
+     llamadas manuales a refresh. Se hace pop() de vuelta a la lista.
+
+PASO 7 - Casos especiales
+  - SUEÑO EN CURSO: una fila de SleepEntries con endTime == NULL representa
+    una sesion activa. watchActiveSleep la expone y la UI muestra un banner
+    con boton "Detener", que hace UPDATE poniendo endTime = ahora.
+  - BORRADOS: siempre con AlertDialog de confirmacion. Al borrar un bebe,
+    las FK con onDelete: cascade eliminan automaticamente sus tomas,
+    sueños y pesos.
+
+5. ¿COMO SE GUARDAN LOS DATOS EN EL MOVIL SIN API?
+--------------------------------------------------------------------------------
+La clave es que el movil YA tiene un motor de base de datos: SQLite viene
+embebido (o se incluye con sqlite3_flutter_libs). No hace falta servidor.
+
+  App Flutter
+     │  ref.watch(databaseProvider)
+     ▼
+  AppDatabase (Drift)  ->  capa Dart tipada sobre SQL: tablas como clases,
+     │                     consultas como metodos, codigo generado en *.g.dart
+     ▼
+  SQLite nativo        ->  motor SQL real corriendo DENTRO de la app
+     │
+     ▼
+  Fichero baby_tracker.sqlite en el "sandbox" privado de la app:
+     - Android: /data/data/<package>/app_flutter/  (aprox.)
+     - iOS:     <App>/Documents/
+     - Lo devuelve getApplicationDocumentsDirectory() de path_provider
+
+Propiedades de este enfoque:
+  - PERSISTENCIA: el fichero sobrevive a cierres de la app y reinicios del
+    movil. Solo se pierde si se desinstala la app o se borran sus datos.
+  - PRIVACIDAD: el sandbox es privado; otras apps no pueden leerlo.
+  - OFFLINE TOTAL: no hay red, asi que no hay latencia ni errores de conexion.
+  - TRANSACCIONAL: SQLite garantiza integridad (FK, transacciones ACID).
+  - LIMITACION: los datos viven SOLO en ese dispositivo. No hay sincronizacion
+    entre moviles ni copia de seguridad en la nube (salvo el backup automatico
+    del sistema operativo, si esta activado).
+
+Esquema de tablas:
+  Babies        id (UUID, PK), name, birthDate, gender ('male'/'female'/'other')...
+  Feedings      id, babyId (FK cascade), type ('breast_left', 'breast_right',
+                'bottle_formula', 'bottle_breast_milk'), amountMl (biberon),
+                durationMinutes (pecho), startTime, notes
+  SleepEntries  id, babyId (FK cascade), startTime, endTime (NULL = en curso)
+  WeightEntries id, babyId (FK cascade), weightGrams (en GRAMOS; la UI pide
+                kg y multiplica x1000), fecha
+
+6. ¿QUE HABRIA QUE HACER PARA USAR UNA API?
+--------------------------------------------------------------------------------
+Hay dos estrategias posibles:
+
+OPCION A - Sustituir SQLite por la API (solo online)
+  La app deja de guardar en local y cada operacion es una peticion HTTP.
+  Mas simple, pero la app deja de funcionar sin internet. No recomendada
+  para una app de este tipo (se usa con una mano, de madrugada, a veces
+  sin cobertura).
+
+OPCION B - SQLite como cache + sincronizacion (offline-first, RECOMENDADA)
+  Se mantiene todo lo actual y se añade una capa de sincronizacion. La UI
+  no cambia: sigue leyendo de los streams de Drift.
+
+Pasos concretos (para la opcion B):
+
+  1. BACKEND
+     - Crear una API REST (o GraphQL) con endpoints CRUD por entidad:
+         GET/POST   /babies            GET/POST   /babies/{id}/feedings
+         PUT/DELETE /feedings/{id}     ...igual para sleep y weight
+     - Una base de datos en el servidor (PostgreSQL, etc.) con el mismo
+       esquema. VENTAJA del diseño actual: los IDs ya son UUID generados
+       en el cliente, asi que se pueden crear registros offline sin
+       conflictos de IDs al sincronizar (con autoincrement seria un problema).
+
+  2. CAPA DE RED EN FLUTTER
+     - Añadir dependencias: dio (o http) y opcionalmente retrofit/json_serializable.
+     - Crear lib/api/ con:
+         api_client.dart      configuracion de Dio (baseUrl, timeouts,
+                              interceptor que añade el token de autenticacion)
+         <entidad>_api.dart   metodos que llaman a los endpoints
+         dtos/                modelos JSON <-> objetos (toJson/fromJson)
+     - Exponer el cliente con un Provider de Riverpod, igual que databaseProvider.
+
+  3. PATRON REPOSITORY (el cambio estructural clave)
+     Hoy los providers hablan DIRECTAMENTE con los DAOs:
+         feedingsProvider -> db.feedingsDao.watchFeedingsByBaby(...)
+     Habria que introducir un repositorio entre medias:
+         feedingsProvider -> FeedingsRepository -> { FeedingsDao + FeedingsApi }
+     El repositorio decide:
+       - LECTURA: siempre desde Drift (la UI no nota nada, sigue siendo
+         un stream local e instantaneo)
+       - ESCRITURA: 1) inserta en Drift (la UI se actualiza al instante),
+         2) encola la operacion para enviarla a la API
+
+  4. SINCRONIZACION
+     - Añadir a las tablas columnas de control:
+         updatedAt   (DateTime)   para resolver conflictos
+         syncStatus  ('synced' | 'pending' | 'deleted')
+       Esto implica subir schemaVersion y escribir la migracion en onUpgrade.
+     - Borrado logico: en vez de DELETE inmediato, marcar 'deleted' y borrar
+       de verdad cuando el servidor confirme.
+     - Un SyncService que:
+         a) al arrancar y al recuperar conexion (connectivity_plus), envia
+            todo lo 'pending' al servidor
+         b) descarga cambios del servidor (ej. GET /sync?since=<timestamp>)
+         c) resuelve conflictos (estrategia simple: gana el updatedAt mas
+            reciente, "last write wins")
+     - Opcional: sincronizacion en segundo plano con workmanager.
+
+  5. AUTENTICACION
+     - Al haber servidor, hacen falta usuarios: pantalla de login/registro,
+       tokens JWT guardados en flutter_secure_storage, interceptor de Dio
+       que añade "Authorization: Bearer <token>" y refresca el token.
+     - En el servidor, cada bebe queda asociado a una cuenta de usuario
+       (y permitiria COMPARTIR un bebe entre dos cuidadores, que es el
+       beneficio real de añadir una API a esta app).
+
+  6. LO QUE NO CAMBIA (gracias a la arquitectura actual)
+     - Las pantallas y widgets: siguen consumiendo los mismos providers.
+     - Los streams de Drift: siguen siendo la fuente de la UI.
+     - El tema, el router y la logica de bebe seleccionado.
+     El unico punto de contacto a tocar son los providers de datos
+     (feedingsProvider, etc.), que pasarian de llamar al DAO a llamar al
+     repositorio. Por eso la inyeccion via databaseProvider fue una buena
+     decision: facilita sustituir la fuente de datos sin tocar la UI.
+
+7. COMANDOS UTILES
+--------------------------------------------------------------------------------
+flutter pub get                                            instalar dependencias
+dart run build_runner build --delete-conflicting-outputs   regenerar *.g.dart
+                                                           (OBLIGATORIO tras tocar
+                                                           tablas o DAOs)
+flutter run                                                ejecutar la app
+flutter analyze                                            analisis estatico
+flutter test                                               tests
+
+Nota: nunca editar a mano los archivos generados *.g.dart.
+================================================================================

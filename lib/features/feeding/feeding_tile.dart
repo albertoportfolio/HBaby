@@ -18,7 +18,7 @@ class FeedingTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -39,13 +39,13 @@ class FeedingTile extends StatelessWidget {
           ),
           child: Icon(type.icon, color: type.color, size: 24),
         ),
-        title: Text(type.label, style: theme.textTheme.titleMedium),
+        title: Text(type.label(context), style: theme.textTheme.titleMedium),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 2),
             Text(
-              DateFormatter.formatDateTime(feeding.startTime),
+              DateFormatter.formatDateTime(context, feeding.startTime),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.outline,
               ),

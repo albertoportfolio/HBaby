@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/empty_state.dart';
+import '../../../core/utils/l10n_extension.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../database/app_database.dart';
 import '../providers/weight_provider.dart';
@@ -16,24 +17,24 @@ class WeightScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weightAsync = ref.watch(weightEntriesProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Peso')),
+      appBar: AppBar(title: Text(l10n.weightScreenTitle)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/weight/add'),
         child: const Icon(Icons.add_rounded),
       ),
       body: weightAsync.when(
         loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(l10n.errorLabel('$e'))),
         data: (entries) {
           if (entries.isEmpty) {
             return EmptyState(
               icon: Icons.monitor_weight_outlined,
-              title: 'Sin registros de peso',
-              subtitle:
-                  'Añade una entrada para empezar a registrar el crecimiento.',
-              actionLabel: 'Añadir peso',
+              title: l10n.weightEmptyTitle,
+              subtitle: l10n.weightEmptySubtitle,
+              actionLabel: l10n.addWeightAction,
               onAction: () => context.push('/weight/add'),
             );
           }
@@ -41,7 +42,8 @@ class WeightScreen extends ConsumerWidget {
           // Entries arrive newest-first from the DAO.
           final grouped = <String, List<WeightEntry>>{};
           for (final entry in entries) {
-            final day = DateFormatter.formatRelativeDate(entry.measuredAt);
+            final day =
+                DateFormatter.formatRelativeDate(context, entry.measuredAt);
             grouped.putIfAbsent(day, () => []).add(entry);
           }
 
@@ -88,20 +90,21 @@ class WeightScreen extends ConsumerWidget {
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, String id) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Borrar registro'),
-        content: const Text('¿Deseas eliminar este registro de peso?'),
+        title: Text(l10n.deleteWeightTitle),
+        content: Text(l10n.deleteWeightMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Eliminar'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -113,7 +116,7 @@ class WeightScreen extends ConsumerWidget {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registro de peso eliminado')),
+        SnackBar(content: Text(l10n.weightDeleted)),
       );
     }
   }
@@ -164,13 +167,14 @@ class _WeightSummaryHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Peso actual', style: theme.textTheme.labelSmall),
+                Text(context.l10n.currentWeight,
+                    style: theme.textTheme.labelSmall),
                 Text(
-                  DateFormatter.formatWeight(latest.weightGrams),
+                  DateFormatter.formatWeight(context, latest.weightGrams),
                   style: theme.textTheme.headlineLarge,
                 ),
                 Text(
-                  DateFormatter.formatRelativeDate(latest.measuredAt),
+                  DateFormatter.formatRelativeDate(context, latest.measuredAt),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.outline,
                   ),
@@ -243,7 +247,7 @@ class _WeightTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -267,7 +271,7 @@ class _WeightTile extends StatelessWidget {
               color: _weightColor, size: 24),
         ),
         title: Text(
-          DateFormatter.formatWeight(entry.weightGrams),
+          DateFormatter.formatWeight(context, entry.weightGrams),
           style: theme.textTheme.titleMedium,
         ),
         subtitle: Column(
@@ -275,7 +279,7 @@ class _WeightTile extends StatelessWidget {
           children: [
             const SizedBox(height: 2),
             Text(
-              DateFormatter.formatDateTime(entry.measuredAt),
+              DateFormatter.formatDateTime(context, entry.measuredAt),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.outline,
               ),
@@ -283,8 +287,9 @@ class _WeightTile extends StatelessWidget {
             if (diff != null && diff != 0)
               Text(
                 diff > 0
-                    ? '+${diff.toStringAsFixed(0)} g desde la anterior'
-                    : '−${diff.abs().toStringAsFixed(0)} g desde la anterior',
+                    ? context.l10n.gainSincePrevious(diff.toStringAsFixed(0))
+                    : context.l10n
+                        .lossSincePrevious(diff.abs().toStringAsFixed(0)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: diff > 0 ? _weightColor : Colors.orange,
                   fontWeight: FontWeight.w600,

@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/l10n_extension.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../database/app_database.dart';
 import '../../baby/baby_avatar.dart';
 import '../../baby/providers/baby_provider.dart';
 import '../../feeding/feeding_provider.dart';
 import '../../feeding/feeding_type.dart';
+import '../../settings/settings_sheet.dart';
 import '../../sleep/sleep_provider.dart';
 import '../../weight/providers/weight_provider.dart';
 
@@ -22,21 +24,27 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final baby = ref.watch(selectedBabyProvider);
     final babiesAsync = ref.watch(babiesProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inicio'),
+        title: Text(l10n.homeTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.child_care_rounded),
-            tooltip: 'Mis bebés',
+            tooltip: l10n.myBabies,
             onPressed: () => context.push('/babies'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => showSettingsSheet(context),
           ),
         ],
       ),
       body: babiesAsync.when(
         loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(l10n.errorLabel('$e'))),
         data: (_) {
           if (baby == null) {
             // The router redirects to /babies/add when there are no babies.
@@ -57,6 +65,7 @@ class _DashboardBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeSleep = ref.watch(activeSleepProvider).valueOrNull;
+    final l10n = context.l10n;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -67,11 +76,11 @@ class _DashboardBody extends ConsumerWidget {
           _ActiveSleepCard(active: activeSleep),
         ],
         const SizedBox(height: 24),
-        Text('Resumen de hoy', style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.todaySummary, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         const _TodaySummary(),
         const SizedBox(height: 24),
-        Text('Acciones rápidas', style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.quickActions, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         const _QuickActions(),
       ],
@@ -116,11 +125,11 @@ class _BabyHeaderCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Hola, soy', style: theme.textTheme.labelSmall),
+                Text(context.l10n.helloIAm, style: theme.textTheme.labelSmall),
                 Text(baby.name, style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 2),
                 Text(
-                  DateFormatter.getAge(baby.birthDate),
+                  DateFormatter.getAge(context, baby.birthDate),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -134,7 +143,7 @@ class _BabyHeaderCard extends StatelessWidget {
               Icons.swap_horiz_rounded,
               color: theme.colorScheme.primary,
             ),
-            tooltip: 'Cambiar de bebé',
+            tooltip: context.l10n.switchBaby,
             onPressed: () => context.push('/babies'),
           ),
         ],
@@ -178,12 +187,12 @@ class _ActiveSleepCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Durmiendo ahora',
+                  context.l10n.sleepingNow,
                   style:
                       theme.textTheme.titleMedium?.copyWith(color: _sleepColor),
                 ),
                 Text(
-                  DateFormatter.elapsed(active.startTime),
+                  DateFormatter.elapsed(context, active.startTime),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: _sleepColor.withValues(alpha: 0.8)),
                 ),
@@ -205,7 +214,7 @@ class _ActiveSleepCard extends ConsumerWidget {
               minimumSize: const Size(80, 36),
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            child: const Text('Detener'),
+            child: Text(context.l10n.stopButton),
           ),
         ],
       ),
@@ -223,6 +232,7 @@ class _TodaySummary extends ConsumerWidget {
     final feedings = ref.watch(feedingsProvider).valueOrNull ?? [];
     final sleepEntries = ref.watch(sleepEntriesProvider).valueOrNull ?? [];
     final weights = ref.watch(weightEntriesProvider).valueOrNull ?? [];
+    final l10n = context.l10n;
 
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -241,7 +251,7 @@ class _TodaySummary extends ConsumerWidget {
     }
     final feedingDetail = [
       if (totalMl > 0) DateFormatter.formatVolume(totalMl),
-      if (totalBreastMin > 0) '$totalBreastMin min pecho',
+      if (totalBreastMin > 0) l10n.breastMinutes(totalBreastMin),
     ].join(' · ');
     final lastFeeding = feedings.isNotEmpty ? feedings.first : null;
 
@@ -255,9 +265,10 @@ class _TodaySummary extends ConsumerWidget {
     // Latest weight
     final lastWeight = weights.isNotEmpty ? weights.first : null;
     final prevWeight = weights.length > 1 ? weights[1] : null;
-    String weightDetail = 'Sin registros';
+    String weightDetail = l10n.noRecords;
     if (lastWeight != null) {
-      weightDetail = DateFormatter.formatRelativeDate(lastWeight.measuredAt);
+      weightDetail =
+          DateFormatter.formatRelativeDate(context, lastWeight.measuredAt);
       if (prevWeight != null) {
         final diff = lastWeight.weightGrams - prevWeight.weightGrams;
         if (diff != 0) {
@@ -275,14 +286,17 @@ class _TodaySummary extends ConsumerWidget {
               child: _SummaryCard(
                 icon: Icons.local_drink_rounded,
                 color: const Color(0xFF89CFF0),
-                title: 'Tomas',
+                title: l10n.feedingsLabel,
                 value: '${todayFeedings.length}',
                 detail: todayFeedings.isEmpty
                     ? (lastFeeding != null
-                        ? 'Última: ${DateFormatter.elapsed(lastFeeding.startTime).toLowerCase()}'
-                        : 'Sin registros hoy')
+                        ? l10n.lastFeedingElapsed(
+                            DateFormatter.elapsed(context, lastFeeding.startTime)
+                                .toLowerCase(),
+                          )
+                        : l10n.noRecordsToday)
                     : feedingDetail.isEmpty
-                        ? 'hoy'
+                        ? l10n.todayWord
                         : feedingDetail,
                 onTap: () => context.go('/feedings'),
               ),
@@ -292,11 +306,13 @@ class _TodaySummary extends ConsumerWidget {
               child: _SummaryCard(
                 icon: Icons.bedtime_rounded,
                 color: _sleepColor,
-                title: 'Sueño',
+                title: l10n.sleepLabel,
                 value: todaySleep == Duration.zero
                     ? '—'
                     : DateFormatter.formatDuration(todaySleep),
-                detail: todaySleep == Duration.zero ? 'Sin registros hoy' : 'hoy',
+                detail: todaySleep == Duration.zero
+                    ? l10n.noRecordsToday
+                    : l10n.todayWord,
                 onTap: () => context.go('/sleep'),
               ),
             ),
@@ -306,9 +322,9 @@ class _TodaySummary extends ConsumerWidget {
         _SummaryCard(
           icon: Icons.monitor_weight_rounded,
           color: const Color(0xFFA8E6CF),
-          title: 'Peso',
+          title: l10n.weightLabel,
           value: lastWeight != null
-              ? DateFormatter.formatWeight(lastWeight.weightGrams)
+              ? DateFormatter.formatWeight(context, lastWeight.weightGrams)
               : '—',
           detail: weightDetail,
           onTap: () => context.go('/weight'),
@@ -340,7 +356,7 @@ class _SummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: Colors.white,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -398,12 +414,14 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Row(
       children: [
         Expanded(
           child: _QuickActionButton(
             icon: Icons.local_drink_rounded,
-            label: 'Toma',
+            label: l10n.quickFeeding,
             color: const Color(0xFF89CFF0),
             onTap: () => context.push('/feedings/add'),
           ),
@@ -412,7 +430,7 @@ class _QuickActions extends StatelessWidget {
         Expanded(
           child: _QuickActionButton(
             icon: Icons.bedtime_rounded,
-            label: 'Sueño',
+            label: l10n.sleepLabel,
             color: _sleepColor,
             onTap: () => context.push('/sleep/add'),
           ),
@@ -421,7 +439,7 @@ class _QuickActions extends StatelessWidget {
         Expanded(
           child: _QuickActionButton(
             icon: Icons.monitor_weight_rounded,
-            label: 'Peso',
+            label: l10n.weightLabel,
             color: const Color(0xFFA8E6CF),
             onTap: () => context.push('/weight/add'),
           ),

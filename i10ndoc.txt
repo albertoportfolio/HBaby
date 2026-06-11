@@ -1,0 +1,142 @@
+================================================================================
+ DOCUMENTACIÓN DE INTERNACIONALIZACIÓN (i18n / l10n) — Baby Tracker ("B Health")
+================================================================================
+
+1. RESUMEN
+--------------------------------------------------------------------------------
+La app es multi-idioma (español e inglés) usando el sistema oficial de Flutter
+`gen-l10n` (flutter_localizations + archivos ARB). El inglés es la plantilla
+(template) de las cadenas, pero el ESPAÑOL es el idioma de respaldo (fallback)
+en tiempo de ejecución: si el dispositivo está en un idioma no soportado, la
+app se muestra en español.
+
+No hay textos visibles "hardcodeados" en el código: toda cadena de UI vive en
+los archivos .arb y se accede con `context.l10n.<clave>`.
+
+
+2. ARCHIVOS IMPLICADOS
+--------------------------------------------------------------------------------
+l10n.yaml                                  Configuración de gen-l10n:
+                                             arb-dir: lib/l10n
+                                             template-arb-file: app_en.arb
+                                             output-localizations-file:
+                                               app_localizations.dart
+
+lib/l10n/app_en.arb                        Plantilla (inglés). Define todas las
+                                           claves, placeholders y plurales.
+lib/l10n/app_es.arb                        Traducción al español. Debe contener
+                                           las mismas claves que app_en.arb.
+
+lib/l10n/app_localizations.dart            CÓDIGO GENERADO (clase abstracta
+lib/l10n/app_localizations_en.dart         AppLocalizations + implementaciones
+lib/l10n/app_localizations_es.dart         por idioma). NO editar a mano: se
+                                           regenera con `flutter gen-l10n` o
+                                           automáticamente al compilar
+                                           (pubspec.yaml -> flutter: generate: true).
+
+lib/core/utils/l10n_extension.dart         Extensión de acceso rápido:
+                                             extension L10nX on BuildContext {
+                                               AppLocalizations get l10n =>
+                                                 AppLocalizations.of(this)!;
+                                             }
+                                           También re-exporta app_localizations.dart,
+                                           así que basta importar esta extensión.
+
+lib/app/app.dart                           Registro en MaterialApp.router:
+                                             localizationsDelegates:
+                                               AppLocalizations.localizationsDelegates
+                                             supportedLocales:
+                                               [Locale('es'), Locale('en')]
+                                           El español va PRIMERO en la lista para
+                                           que actúe como fallback de locales no
+                                           soportados. El título de la app se
+                                           localiza con onGenerateTitle.
+
+lib/main.dart                              Inicializa los datos de fecha de intl
+                                           para ambos idiomas antes de arrancar:
+                                             await initializeDateFormatting('es');
+                                             await initializeDateFormatting('en');
+
+pubspec.yaml                               Dependencias: flutter_localizations
+                                           (sdk) e intl ^0.20.2. Y la opción
+                                           `flutter: generate: true` que activa
+                                           la generación de l10n al compilar.
+
+
+3. CÓMO USAR LAS CADENAS EN EL CÓDIGO
+--------------------------------------------------------------------------------
+Importar la extensión y usar `context.l10n`:
+
+    import '../../core/utils/l10n_extension.dart';
+
+    Text(context.l10n.addFeedingTitle)            // cadena simple
+    Text(context.l10n.errorLabel('$e'))           // con placeholder
+    Text(context.l10n.feedingsCount(items.length)) // plural
+
+Patrones del proyecto que también producen texto localizado:
+  - DateFormatter (core/utils/date_formatter.dart): los métodos que generan
+    texto reciben BuildContext (formatRelativeDate, getAge, elapsed,
+    formatWeight, formatos de fecha) y usan el locale activo de intl.
+  - Los enums FeedingType y BabyGender exponen `label(context)` (y variantes
+    cortas) en lugar de strings fijos.
+
+
+4. FORMATO DE LOS ARCHIVOS ARB
+--------------------------------------------------------------------------------
+Cadena simple:
+    "cancel": "Cancel",
+
+Con placeholder (requiere entrada @ con metadatos):
+    "errorLabel": "Error: {error}",
+    "@errorLabel": { "placeholders": { "error": { "type": "String" } } },
+
+Plural (sintaxis ICU; el placeholder es de tipo num):
+    "feedingsCount": "{count, plural, =1{1 feeding} other{{count} feedings}}",
+    "@feedingsCount": { "placeholders": { "count": { "type": "num" } } },
+
+Varios placeholders:
+    "ageYearsMonths": "{years} and {months}",
+    "@ageYearsMonths": { "placeholders": {
+        "years":  { "type": "String" },
+        "months": { "type": "String" } } }
+
+Notas:
+  - app_en.arb empieza con "@@locale": "en" y app_es.arb con "@@locale": "es".
+  - Las claves usan camelCase y están agrupadas por feature (comunes, nav,
+    home, feeding, sleep, weight, babies, edad).
+
+
+5. AÑADIR UNA CADENA NUEVA (PASO A PASO)
+--------------------------------------------------------------------------------
+1) Añadir la clave en lib/l10n/app_en.arb (plantilla), con su entrada @ si
+   lleva placeholders o plural.
+2) Añadir la MISMA clave traducida en lib/l10n/app_es.arb.
+3) Regenerar el código:
+       flutter gen-l10n
+   (o simplemente compilar/ejecutar: `flutter run` lo genera solo gracias a
+   `generate: true` en pubspec.yaml).
+4) Usarla en la UI con `context.l10n.<clave>`.
+5) Comprobar con `flutter analyze` que no falta la clave en ningún idioma
+   (gen-l10n avisa de claves sin traducir).
+
+REGLA: nunca escribir texto visible directamente en widgets; siempre pasa por
+los dos .arb. El código y los comentarios se escriben en inglés.
+
+
+6. AÑADIR UN IDIOMA NUEVO (EJEMPLO: FRANCÉS)
+--------------------------------------------------------------------------------
+1) Crear lib/l10n/app_fr.arb con "@@locale": "fr" y todas las claves traducidas.
+2) Añadir Locale('fr') a supportedLocales en lib/app/app.dart (después de 'es',
+   que debe seguir primero para conservar el fallback).
+3) Añadir `await initializeDateFormatting('fr');` en lib/main.dart.
+4) Ejecutar `flutter gen-l10n` (genera app_localizations_fr.dart).
+
+
+7. SELECCIÓN DE IDIOMA EN TIEMPO DE EJECUCIÓN
+--------------------------------------------------------------------------------
+No hay selector de idioma en la app: se usa el idioma del dispositivo. Flutter
+resuelve el locale contra supportedLocales; como ['es','en'] tiene el español
+primero, cualquier idioma de dispositivo distinto de inglés/español cae en
+español. Las fechas (intl/DateFormat) siguen el mismo locale activo porque
+DateFormatter recibe el BuildContext.
+================================================================================

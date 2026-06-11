@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
 import '../../baby/providers/baby_provider.dart';
 import '../feeding_type.dart';
@@ -56,10 +57,11 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final baby = ref.read(selectedBabyProvider);
     if (baby == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona un bebé antes de guardar la toma')),
+        SnackBar(content: Text(l10n.selectBabyFirst)),
       );
       return;
     }
@@ -76,14 +78,14 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
     if (_type.isBottle) {
       if (amountText.isEmpty || amountMl == null || amountMl <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Introduce una cantidad válida en ml')),
+          SnackBar(content: Text(l10n.invalidAmount)),
         );
         return;
       }
     } else {
       if (durationText.isEmpty || durationMinutes == null || durationMinutes <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Introduce una duración válida en minutos')),
+          SnackBar(content: Text(l10n.invalidDuration)),
         );
         return;
       }
@@ -112,7 +114,7 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(content: Text(l10n.saveError('$e'))),
         );
       }
     } finally {
@@ -123,9 +125,10 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Añadir toma')),
+      appBar: AppBar(title: Text(l10n.addFeedingTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -133,7 +136,7 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Type selector
-              Text('Tipo de toma', style: theme.textTheme.titleMedium),
+              Text(l10n.feedingTypeLabel, style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -143,7 +146,7 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
                   return ChoiceChip(
                     avatar: Icon(t.icon,
                         size: 16, color: selected ? t.color : null),
-                    label: Text(t.shortLabel),
+                    label: Text(t.shortLabel(context)),
                     selected: selected,
                     selectedColor: t.color.withValues(alpha: 0.2),
                     onSelected: (_) => setState(() => _type = t),
@@ -154,36 +157,36 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
 
               // Amount / Duration
               if (_type.isBottle) ...[
-                Text('Cantidad (ml)', style: theme.textTheme.titleMedium),
+                Text(l10n.amountLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _amountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-                  decoration: const InputDecoration(
-                    hintText: 'ej. 120',
+                  decoration: InputDecoration(
+                    hintText: l10n.amountHint,
                     suffixText: 'ml',
-                    prefixIcon: Icon(Icons.local_drink_outlined),
+                    prefixIcon: const Icon(Icons.local_drink_outlined),
                   ),
                 ),
               ] else ...[
-                Text('Duración (minutos)', style: theme.textTheme.titleMedium),
+                Text(l10n.durationLabel, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _durationController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    hintText: 'ej. 15',
+                  decoration: InputDecoration(
+                    hintText: l10n.durationHint,
                     suffixText: 'min',
-                    prefixIcon: Icon(Icons.timer_outlined),
+                    prefixIcon: const Icon(Icons.timer_outlined),
                   ),
                 ),
               ],
               const SizedBox(height: 24),
 
               // Date & time
-              Text('Hora de inicio', style: theme.textTheme.titleMedium),
+              Text(l10n.startTimeLabel, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               InkWell(
                 onTap: _pickDateTime,
@@ -205,13 +208,13 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
               const SizedBox(height: 24),
 
               // Notes
-              Text('Notas (opcional)', style: theme.textTheme.titleMedium),
+              Text(l10n.notesLabel, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Observaciones...',
+                decoration: InputDecoration(
+                  hintText: l10n.notesHint,
                 ),
               ),
               const SizedBox(height: 40),
@@ -227,7 +230,7 @@ class _AddFeedingScreenState extends ConsumerState<AddFeedingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Guardar toma'),
+                    : Text(l10n.saveFeeding),
               ),
             ],
           ),
