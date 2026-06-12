@@ -1,4 +1,4 @@
-# B Health — Baby Tracker
+# H Baby — Baby Tracker
 
 Flutter app to manage a baby's daily routine and growth: milk/food feedings,
 sleep sessions and weight records. All data is stored **locally** on the
