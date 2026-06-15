@@ -37,15 +37,45 @@ class AppSettings {
   final Locale? locale;
   final AppThemeTone tone;
 
-  const AppSettings({this.locale, this.tone = AppThemeTone.pink});
+  // ── One-tap quick-log defaults ────────────────────────────────────────────
+  /// Feeding type stored as its DB string value (see FeedingType.value).
+  final String defaultFeedingType;
+
+  /// Volume in ml used when the default feeding type is a bottle.
+  final double defaultFeedingAmountMl;
+
+  /// Duration in minutes used when the default feeding type is breast.
+  final int defaultFeedingDurationMinutes;
+
+  /// Duration in minutes of the nap logged by the quick-nap button.
+  final int defaultNapMinutes;
+
+  const AppSettings({
+    this.locale,
+    this.tone = AppThemeTone.pink,
+    this.defaultFeedingType = 'breast_left',
+    this.defaultFeedingAmountMl = 120,
+    this.defaultFeedingDurationMinutes = 15,
+    this.defaultNapMinutes = 60,
+  });
 
   AppSettings copyWith({
     Locale? locale,
     AppThemeTone? tone,
+    String? defaultFeedingType,
+    double? defaultFeedingAmountMl,
+    int? defaultFeedingDurationMinutes,
+    int? defaultNapMinutes,
   }) {
     return AppSettings(
       locale: locale ?? this.locale,
       tone: tone ?? this.tone,
+      defaultFeedingType: defaultFeedingType ?? this.defaultFeedingType,
+      defaultFeedingAmountMl:
+          defaultFeedingAmountMl ?? this.defaultFeedingAmountMl,
+      defaultFeedingDurationMinutes:
+          defaultFeedingDurationMinutes ?? this.defaultFeedingDurationMinutes,
+      defaultNapMinutes: defaultNapMinutes ?? this.defaultNapMinutes,
     );
   }
 }
@@ -53,6 +83,10 @@ class AppSettings {
 class SettingsNotifier extends StateNotifier<AppSettings> {
   static const _localeKey = 'settings.locale';
   static const _toneKey = 'settings.tone';
+  static const _feedingTypeKey = 'settings.defaultFeedingType';
+  static const _feedingAmountKey = 'settings.defaultFeedingAmountMl';
+  static const _feedingDurationKey = 'settings.defaultFeedingDurationMinutes';
+  static const _napMinutesKey = 'settings.defaultNapMinutes';
 
   final SharedPreferences _prefs;
 
@@ -60,9 +94,18 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
 
   static AppSettings _load(SharedPreferences prefs) {
     final localeCode = prefs.getString(_localeKey);
+    const defaults = AppSettings();
     return AppSettings(
       locale: localeCode == null ? null : Locale(localeCode),
       tone: AppThemeTone.fromValue(prefs.getString(_toneKey)),
+      defaultFeedingType:
+          prefs.getString(_feedingTypeKey) ?? defaults.defaultFeedingType,
+      defaultFeedingAmountMl:
+          prefs.getDouble(_feedingAmountKey) ?? defaults.defaultFeedingAmountMl,
+      defaultFeedingDurationMinutes: prefs.getInt(_feedingDurationKey) ??
+          defaults.defaultFeedingDurationMinutes,
+      defaultNapMinutes:
+          prefs.getInt(_napMinutesKey) ?? defaults.defaultNapMinutes,
     );
   }
 
@@ -74,6 +117,26 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> setTone(AppThemeTone tone) async {
     state = state.copyWith(tone: tone);
     await _prefs.setString(_toneKey, tone.value);
+  }
+
+  Future<void> setDefaultFeedingType(String typeValue) async {
+    state = state.copyWith(defaultFeedingType: typeValue);
+    await _prefs.setString(_feedingTypeKey, typeValue);
+  }
+
+  Future<void> setDefaultFeedingAmountMl(double amount) async {
+    state = state.copyWith(defaultFeedingAmountMl: amount);
+    await _prefs.setDouble(_feedingAmountKey, amount);
+  }
+
+  Future<void> setDefaultFeedingDurationMinutes(int minutes) async {
+    state = state.copyWith(defaultFeedingDurationMinutes: minutes);
+    await _prefs.setInt(_feedingDurationKey, minutes);
+  }
+
+  Future<void> setDefaultNapMinutes(int minutes) async {
+    state = state.copyWith(defaultNapMinutes: minutes);
+    await _prefs.setInt(_napMinutesKey, minutes);
   }
 }
 

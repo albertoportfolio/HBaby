@@ -877,6 +877,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{years} and {months}'**
   String ageYearsMonths(String years, String months);
+
+  /// No description provided for @quickLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap log'**
+  String get quickLogTitle;
+
+  /// No description provided for @quickLogFeeding.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick feeding'**
+  String get quickLogFeeding;
+
+  /// No description provided for @quickLogNap.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick nap'**
+  String get quickLogNap;
+
+  /// No description provided for @feedingLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeding logged'**
+  String get feedingLogged;
+
+  /// No description provided for @napLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Nap logged'**
+  String get napLogged;
+
+  /// No description provided for @undoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undoLabel;
+
+  /// No description provided for @quickDefaultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap defaults'**
+  String get quickDefaultsTitle;
+
+  /// No description provided for @quickDefaultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Values used by the one-tap buttons on the home screen.'**
+  String get quickDefaultsSubtitle;
+
+  /// No description provided for @defaultFeedingTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default feeding type'**
+  String get defaultFeedingTypeLabel;
+
+  /// No description provided for @defaultNapDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default nap duration'**
+  String get defaultNapDurationLabel;
+
+  /// No description provided for @minutesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutesUnit;
 }
 
 class _AppLocalizationsDelegate

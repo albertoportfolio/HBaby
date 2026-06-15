@@ -2,7 +2,9 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/settings/settings_provider.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/l10n_extension.dart';
 import '../../../core/widgets/loading_widget.dart';
@@ -83,8 +85,128 @@ class _DashboardBody extends ConsumerWidget {
         Text(l10n.quickActions, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         const _QuickActions(),
+        const SizedBox(height: 24),
+        Text(l10n.quickLogTitle, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        const _QuickLog(),
       ],
     );
+  }
+}
+
+// ── One-tap quick log ──────────────────────────────────────────────────────
+
+class _QuickLog extends ConsumerWidget {
+  const _QuickLog();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _QuickActionButton(
+            icon: Icons.local_drink_rounded,
+            label: l10n.quickLogFeeding,
+            color: const Color(0xFF89CFF0),
+            prefix: '',
+            onTap: () => _logFeeding(context, ref),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _QuickActionButton(
+            icon: Icons.bedtime_rounded,
+            label: l10n.quickLogNap,
+            color: _sleepColor,
+            prefix: '',
+            onTap: () => _logNap(context, ref),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _logFeeding(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final baby = ref.read(selectedBabyProvider);
+    if (baby == null) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.selectBabyFirst)));
+      return;
+    }
+
+    final settings = ref.read(settingsProvider);
+    final type = FeedingType.fromValue(settings.defaultFeedingType);
+    final db = ref.read(databaseProvider);
+    final id = const Uuid().v4();
+
+    try {
+      await db.feedingsDao.insertFeeding(
+        FeedingsCompanion.insert(
+          id: id,
+          babyId: baby.id,
+          type: type.value,
+          startTime: DateTime.now(),
+          amountMl: type.isBottle
+              ? Value(settings.defaultFeedingAmountMl)
+              : const Value.absent(),
+          durationMinutes: type.isBottle
+              ? const Value.absent()
+              : Value(settings.defaultFeedingDurationMinutes),
+        ),
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.feedingLogged),
+          action: SnackBarAction(
+            label: l10n.undoLabel,
+            onPressed: () => db.feedingsDao.deleteFeeding(id),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.saveError('$e'))));
+    }
+  }
+
+  Future<void> _logNap(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final baby = ref.read(selectedBabyProvider);
+    if (baby == null) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.selectBabyFirst)));
+      return;
+    }
+
+    final settings = ref.read(settingsProvider);
+    final db = ref.read(databaseProvider);
+    final id = const Uuid().v4();
+    final end = DateTime.now();
+    final start = end.subtract(Duration(minutes: settings.defaultNapMinutes));
+
+    try {
+      await db.sleepDao.insertSleep(
+        SleepEntriesCompanion.insert(
+          id: id,
+          babyId: baby.id,
+          startTime: start,
+          endTime: Value(end),
+        ),
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.napLogged),
+          action: SnackBarAction(
+            label: l10n.undoLabel,
+            onPressed: () => db.sleepDao.deleteSleep(id),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.saveError('$e'))));
+    }
   }
 }
 
@@ -455,11 +577,16 @@ class _QuickActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
+  /// Text shown before the label. Defaults to '+ ' for the navigation actions;
+  /// the one-tap log buttons pass an empty string.
+  final String prefix;
+
   const _QuickActionButton({
     required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
+    this.prefix = '+ ',
   });
 
   @override
@@ -479,10 +606,11 @@ class _QuickActionButton extends StatelessWidget {
               Icon(icon, color: color, size: 28),
               const SizedBox(height: 6),
               Text(
-                '+ $label',
+                '$prefix$label',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),

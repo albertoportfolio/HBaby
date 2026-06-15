@@ -479,4 +479,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String ageYearsMonths(String years, String months) {
     return '$years y $months';
   }
+
+  @override
+  String get quickLogTitle => 'Registro en 1 toque';
+
+  @override
+  String get quickLogFeeding => 'Toma rápida';
+
+  @override
+  String get quickLogNap => 'Siesta rápida';
+
+  @override
+  String get feedingLogged => 'Toma registrada';
+
+  @override
+  String get napLogged => 'Siesta registrada';
+
+  @override
+  String get undoLabel => 'Deshacer';
+
+  @override
+  String get quickDefaultsTitle => 'Valores por defecto (1 toque)';
+
+  @override
+  String get quickDefaultsSubtitle =>
+      'Valores que usan los botones de 1 toque de la pantalla de inicio.';
+
+  @override
+  String get defaultFeedingTypeLabel => 'Tipo de toma por defecto';
+
+  @override
+  String get defaultNapDurationLabel => 'Duración de siesta por defecto';
+
+  @override
+  String get minutesUnit => 'min';
 }

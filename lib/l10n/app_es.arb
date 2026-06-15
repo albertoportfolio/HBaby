@@ -140,5 +140,17 @@
   "ageWeeks": "{count, plural, =1{1 semana} other{{count} semanas}}",
   "ageMonths": "{count, plural, =1{1 mes} other{{count} meses}}",
   "ageYears": "{count, plural, =1{1 año} other{{count} años}}",
-  "ageYearsMonths": "{years} y {months}"
+  "ageYearsMonths": "{years} y {months}",
+
+  "quickLogTitle": "Registro en 1 toque",
+  "quickLogFeeding": "Toma rápida",
+  "quickLogNap": "Siesta rápida",
+  "feedingLogged": "Toma registrada",
+  "napLogged": "Siesta registrada",
+  "undoLabel": "Deshacer",
+  "quickDefaultsTitle": "Valores por defecto (1 toque)",
+  "quickDefaultsSubtitle": "Valores que usan los botones de 1 toque de la pantalla de inicio.",
+  "defaultFeedingTypeLabel": "Tipo de toma por defecto",
+  "defaultNapDurationLabel": "Duración de siesta por defecto",
+  "minutesUnit": "min"
 }

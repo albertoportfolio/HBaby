@@ -476,4 +476,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String ageYearsMonths(String years, String months) {
     return '$years and $months';
   }
+
+  @override
+  String get quickLogTitle => 'One-tap log';
+
+  @override
+  String get quickLogFeeding => 'Quick feeding';
+
+  @override
+  String get quickLogNap => 'Quick nap';
+
+  @override
+  String get feedingLogged => 'Feeding logged';
+
+  @override
+  String get napLogged => 'Nap logged';
+
+  @override
+  String get undoLabel => 'Undo';
+
+  @override
+  String get quickDefaultsTitle => 'One-tap defaults';
+
+  @override
+  String get quickDefaultsSubtitle =>
+      'Values used by the one-tap buttons on the home screen.';
+
+  @override
+  String get defaultFeedingTypeLabel => 'Default feeding type';
+
+  @override
+  String get defaultNapDurationLabel => 'Default nap duration';
+
+  @override
+  String get minutesUnit => 'min';
 }

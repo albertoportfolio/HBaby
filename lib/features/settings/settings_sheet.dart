@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/theme.dart';
 import '../../core/settings/settings_provider.dart';
 import '../../core/utils/l10n_extension.dart';
+import '../feeding/feeding_type.dart';
 
 /// Opens the settings bottom sheet (language + app color tone).
 Future<void> showSettingsSheet(BuildContext context) {
@@ -67,6 +69,8 @@ class SettingsSheet extends ConsumerWidget {
                 ],
               ],
             ),
+            const SizedBox(height: 24),
+            const _QuickDefaultsSection(),
             const SizedBox(height: 16),
             Text(l10n.legalLabel, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
@@ -81,6 +85,137 @@ class SettingsSheet extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Lets the user configure the values used by the one-tap log buttons
+/// on the dashboard (feeding type + amount/duration, and nap length).
+class _QuickDefaultsSection extends ConsumerStatefulWidget {
+  const _QuickDefaultsSection();
+
+  @override
+  ConsumerState<_QuickDefaultsSection> createState() =>
+      _QuickDefaultsSectionState();
+}
+
+class _QuickDefaultsSectionState extends ConsumerState<_QuickDefaultsSection> {
+  late final TextEditingController _amountController;
+  late final TextEditingController _durationController;
+  late final TextEditingController _napController;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = ref.read(settingsProvider);
+    _amountController =
+        TextEditingController(text: _fmtNum(s.defaultFeedingAmountMl));
+    _durationController =
+        TextEditingController(text: '${s.defaultFeedingDurationMinutes}');
+    _napController = TextEditingController(text: '${s.defaultNapMinutes}');
+  }
+
+  String _fmtNum(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : '$v';
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _durationController.dispose();
+    _napController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    final type = FeedingType.fromValue(settings.defaultFeedingType);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.quickDefaultsTitle, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 2),
+        Text(l10n.quickDefaultsSubtitle, style: theme.textTheme.labelSmall),
+        const SizedBox(height: 12),
+        Text(l10n.defaultFeedingTypeLabel, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: FeedingType.values.map((t) {
+            final selected = type == t;
+            return ChoiceChip(
+              avatar:
+                  Icon(t.icon, size: 16, color: selected ? t.color : null),
+              label: Text(t.shortLabel(context)),
+              selected: selected,
+              selectedColor: t.color.withValues(alpha: 0.2),
+              onSelected: (_) => notifier.setDefaultFeedingType(t.value),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        if (type.isBottle)
+          TextField(
+            controller: _amountController,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+            ],
+            decoration: InputDecoration(
+              labelText: l10n.amountLabel,
+              hintText: l10n.amountHint,
+              suffixText: 'ml',
+              prefixIcon: const Icon(Icons.local_drink_outlined),
+            ),
+            onChanged: (v) {
+              final parsed = double.tryParse(v.replaceAll(',', '.'));
+              if (parsed != null && parsed > 0) {
+                notifier.setDefaultFeedingAmountMl(parsed);
+              }
+            },
+          )
+        else
+          TextField(
+            controller: _durationController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l10n.durationLabel,
+              hintText: l10n.durationHint,
+              suffixText: l10n.minutesUnit,
+              prefixIcon: const Icon(Icons.timer_outlined),
+            ),
+            onChanged: (v) {
+              final parsed = int.tryParse(v);
+              if (parsed != null && parsed > 0) {
+                notifier.setDefaultFeedingDurationMinutes(parsed);
+              }
+            },
+          ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _napController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            labelText: l10n.defaultNapDurationLabel,
+            suffixText: l10n.minutesUnit,
+            prefixIcon: const Icon(Icons.bedtime_outlined),
+          ),
+          onChanged: (v) {
+            final parsed = int.tryParse(v);
+            if (parsed != null && parsed > 0) {
+              notifier.setDefaultNapMinutes(parsed);
+            }
+          },
+        ),
+      ],
     );
   }
 }

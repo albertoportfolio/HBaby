@@ -158,5 +158,17 @@
   "ageYears": "{count, plural, =1{1 year} other{{count} years}}",
   "@ageYears": { "placeholders": { "count": { "type": "num" } } },
   "ageYearsMonths": "{years} and {months}",
-  "@ageYearsMonths": { "placeholders": { "years": { "type": "String" }, "months": { "type": "String" } } }
+  "@ageYearsMonths": { "placeholders": { "years": { "type": "String" }, "months": { "type": "String" } } },
+
+  "quickLogTitle": "One-tap log",
+  "quickLogFeeding": "Quick feeding",
+  "quickLogNap": "Quick nap",
+  "feedingLogged": "Feeding logged",
+  "napLogged": "Nap logged",
+  "undoLabel": "Undo",
+  "quickDefaultsTitle": "One-tap defaults",
+  "quickDefaultsSubtitle": "Values used by the one-tap buttons on the home screen.",
+  "defaultFeedingTypeLabel": "Default feeding type",
+  "defaultNapDurationLabel": "Default nap duration",
+  "minutesUnit": "min"
 }
