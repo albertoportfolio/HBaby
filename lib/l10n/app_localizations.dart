@@ -830,12 +830,6 @@ abstract class AppLocalizations {
   /// **'Girl'**
   String get genderGirl;
 
-  /// No description provided for @genderOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get genderOther;
-
   /// No description provided for @saveBaby.
   ///
   /// In en, this message translates to:

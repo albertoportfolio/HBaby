@@ -420,9 +420,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genderGirl => 'Girl';
 
   @override
-  String get genderOther => 'Other';
-
-  @override
   String get saveBaby => 'Save baby';
 
   @override

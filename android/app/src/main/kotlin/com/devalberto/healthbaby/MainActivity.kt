@@ -1,4 +1,4 @@
-package com.example.flutter_babynanny
+package com.devalberto.healthbaby
 
 import io.flutter.embedding.android.FlutterActivity
 

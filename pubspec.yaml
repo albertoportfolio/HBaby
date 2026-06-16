@@ -65,6 +65,26 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/hbaby_logo.png"
+  adaptive_icon_background: "#FFFFFF" # Color de fondo (ej. Blanco)
+  adaptive_icon_foreground: "assets/hbaby_transparente_logo.png"
+  min_sdk_android: 21 # Tu min_sdk configurado en android/app/build.gradle
+
+# Aquí configuras tu pantalla de bienvenida:
+flutter_native_splash:
+  color: "#1e293b" # El color de fondo en código HEX (ej. Azul oscuro)
+  image: "assets/hbaby_transparente_logo.png" # La ruta de tu logo
+  
+  # Opcional: Si quieres que el logo se adapte mejor en Android moderno
+  android_12:
+    color: "#1e293b"
+    image: "assets/hbaby_transparente_logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

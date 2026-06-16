@@ -4,8 +4,7 @@ import '../../core/utils/l10n_extension.dart';
 
 enum BabyGender {
   male,
-  female,
-  other;
+  female;
 
   String label(BuildContext context) {
     final l10n = context.l10n;
@@ -14,8 +13,6 @@ enum BabyGender {
         return l10n.genderBoy;
       case BabyGender.female:
         return l10n.genderGirl;
-      case BabyGender.other:
-        return l10n.genderOther;
     }
   }
 
@@ -25,8 +22,6 @@ enum BabyGender {
         return 'male';
       case BabyGender.female:
         return 'female';
-      case BabyGender.other:
-        return 'other';
     }
   }
 
@@ -36,8 +31,6 @@ enum BabyGender {
         return const Color(0xFF89CFF0);
       case BabyGender.female:
         return const Color(0xFFFF8FAB);
-      case BabyGender.other:
-        return const Color(0xFFA8E6CF);
     }
   }
 
@@ -47,14 +40,12 @@ enum BabyGender {
         return Icons.boy_rounded;
       case BabyGender.female:
         return Icons.girl_rounded;
-      case BabyGender.other:
-        return Icons.child_care_rounded;
     }
   }
 
   static BabyGender fromValue(String value) =>
       BabyGender.values.firstWhere(
         (g) => g.value == value,
-        orElse: () => BabyGender.other,
+        orElse: () => BabyGender.male,
       );
 }

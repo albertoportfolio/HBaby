@@ -20,7 +20,7 @@ class _AddBabyScreenState extends ConsumerState<AddBabyScreen> {
   final _nameController = TextEditingController();
 
   DateTime? _selectedDate;
-  BabyGender _selectedGender = BabyGender.other;
+  BabyGender _selectedGender = BabyGender.male;
   bool _isSaving = false;
 
   @override
