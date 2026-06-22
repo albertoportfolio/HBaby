@@ -510,4 +510,38 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get minutesUnit => 'min';
+
+  @override
+  String get navStats => 'Gráficas';
+
+  @override
+  String get statsTitle => 'Evolución';
+
+  @override
+  String get statsEmptyTitle => 'Aún no hay datos que mostrar';
+
+  @override
+  String get statsEmptySubtitle =>
+      'Empieza a registrar sueño, tomas y peso para ver aquí la evolución.';
+
+  @override
+  String get statsNoData => 'Aún no hay datos suficientes';
+
+  @override
+  String get statsSleepCardTitle => 'Sueño';
+
+  @override
+  String get statsSleepCardSubtitle => 'Horas por día · últimos 14 días';
+
+  @override
+  String get statsFeedingCardTitle => 'Tomas';
+
+  @override
+  String get statsFeedingCardSubtitle => 'Tomas por día · últimos 14 días';
+
+  @override
+  String get statsWeightCardTitle => 'Peso';
+
+  @override
+  String get statsWeightCardSubtitle => 'Kilogramos en el tiempo';
 }

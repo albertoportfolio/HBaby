@@ -10,8 +10,10 @@ import '../features/home/screens/dashboard_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/sleep/screens/add_sleep_screen.dart';
 import '../features/sleep/screens/sleep_screen.dart';
+import '../features/stats/screens/stats_screen.dart';
 import '../features/weight/screens/add_weight_screen.dart';
 import '../features/weight/screens/weight_screen.dart';
+import 'transitions.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final babiesAsync = ref.watch(babiesProvider);
@@ -32,11 +34,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Baby management ────────────────────────────────────────────────
       GoRoute(
         path: '/babies',
-        builder: (context, state) => const BabiesScreen(),
+        pageBuilder: (context, state) =>
+            slideUpPage(state, const BabiesScreen()),
         routes: [
           GoRoute(
             path: 'add',
-            builder: (context, state) => const AddBabyScreen(),
+            pageBuilder: (context, state) =>
+                slideUpPage(state, const AddBabyScreen()),
           ),
         ],
       ),
@@ -64,7 +68,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder: (context, state) => const AddFeedingScreen(),
+                    pageBuilder: (context, state) =>
+                        slideUpPage(state, const AddFeedingScreen()),
                   ),
                 ],
               ),
@@ -80,7 +85,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder: (context, state) => const AddSleepScreen(),
+                    pageBuilder: (context, state) =>
+                        slideUpPage(state, const AddSleepScreen()),
                   ),
                 ],
               ),
@@ -96,9 +102,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'add',
-                    builder: (context, state) => const AddWeightScreen(),
+                    pageBuilder: (context, state) =>
+                        slideUpPage(state, const AddWeightScreen()),
                   ),
                 ],
+              ),
+            ],
+          ),
+
+          // 4 · Stats / charts
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/stats',
+                builder: (context, state) => const StatsScreen(),
               ),
             ],
           ),

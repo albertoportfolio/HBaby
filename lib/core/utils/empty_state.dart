@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'animations.dart';
+
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -37,13 +39,13 @@ class EmptyState extends StatelessWidget {
                 size: 56,
                 color: theme.colorScheme.primary.withValues(alpha: 0.5),
               ),
-            ),
+            ).entrance(order: 0),
             const SizedBox(height: 24),
             Text(
               title,
               style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
-            ),
+            ).entrance(order: 1),
             const SizedBox(height: 8),
             Text(
               subtitle,
@@ -51,7 +53,7 @@ class EmptyState extends StatelessWidget {
                 color: theme.colorScheme.outline,
               ),
               textAlign: TextAlign.center,
-            ),
+            ).entrance(order: 2),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 32),
               SizedBox(
@@ -60,7 +62,7 @@ class EmptyState extends StatelessWidget {
                   onPressed: onAction,
                   child: Text(actionLabel!),
                 ),
-              ),
+              ).entrance(order: 3),
             ],
           ],
         ),

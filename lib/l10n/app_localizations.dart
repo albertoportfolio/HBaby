@@ -937,6 +937,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'min'**
   String get minutesUnit;
+
+  /// No description provided for @navStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts'**
+  String get navStats;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolution'**
+  String get statsTitle;
+
+  /// No description provided for @statsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to chart yet'**
+  String get statsEmptyTitle;
+
+  /// No description provided for @statsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start logging sleep, feedings and weight to see growth trends here.'**
+  String get statsEmptySubtitle;
+
+  /// No description provided for @statsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get statsNoData;
+
+  /// No description provided for @statsSleepCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get statsSleepCardTitle;
+
+  /// No description provided for @statsSleepCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours per day · last 14 days'**
+  String get statsSleepCardSubtitle;
+
+  /// No description provided for @statsFeedingCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedings'**
+  String get statsFeedingCardTitle;
+
+  /// No description provided for @statsFeedingCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedings per day · last 14 days'**
+  String get statsFeedingCardSubtitle;
+
+  /// No description provided for @statsWeightCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get statsWeightCardTitle;
+
+  /// No description provided for @statsWeightCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilograms over time'**
+  String get statsWeightCardSubtitle;
 }
 
 class _AppLocalizationsDelegate

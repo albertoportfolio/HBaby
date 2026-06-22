@@ -507,4 +507,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minutesUnit => 'min';
+
+  @override
+  String get navStats => 'Charts';
+
+  @override
+  String get statsTitle => 'Evolution';
+
+  @override
+  String get statsEmptyTitle => 'Nothing to chart yet';
+
+  @override
+  String get statsEmptySubtitle =>
+      'Start logging sleep, feedings and weight to see growth trends here.';
+
+  @override
+  String get statsNoData => 'Not enough data yet';
+
+  @override
+  String get statsSleepCardTitle => 'Sleep';
+
+  @override
+  String get statsSleepCardSubtitle => 'Hours per day · last 14 days';
+
+  @override
+  String get statsFeedingCardTitle => 'Feedings';
+
+  @override
+  String get statsFeedingCardSubtitle => 'Feedings per day · last 14 days';
+
+  @override
+  String get statsWeightCardTitle => 'Weight';
+
+  @override
+  String get statsWeightCardSubtitle => 'Kilograms over time';
 }

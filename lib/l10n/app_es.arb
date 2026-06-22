@@ -151,5 +151,17 @@
   "quickDefaultsSubtitle": "Valores que usan los botones de 1 toque de la pantalla de inicio.",
   "defaultFeedingTypeLabel": "Tipo de toma por defecto",
   "defaultNapDurationLabel": "Duración de siesta por defecto",
-  "minutesUnit": "min"
+  "minutesUnit": "min",
+
+  "navStats": "Gráficas",
+  "statsTitle": "Evolución",
+  "statsEmptyTitle": "Aún no hay datos que mostrar",
+  "statsEmptySubtitle": "Empieza a registrar sueño, tomas y peso para ver aquí la evolución.",
+  "statsNoData": "Aún no hay datos suficientes",
+  "statsSleepCardTitle": "Sueño",
+  "statsSleepCardSubtitle": "Horas por día · últimos 14 días",
+  "statsFeedingCardTitle": "Tomas",
+  "statsFeedingCardSubtitle": "Tomas por día · últimos 14 días",
+  "statsWeightCardTitle": "Peso",
+  "statsWeightCardSubtitle": "Kilogramos en el tiempo"
 }

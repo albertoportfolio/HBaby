@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/animations.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../database/app_database.dart';
 import 'feeding_type.dart';
@@ -80,6 +81,6 @@ class FeedingTile extends StatelessWidget {
           onPressed: onDelete,
         ),
       ),
-    );
+    ).softFade();
   }
 }

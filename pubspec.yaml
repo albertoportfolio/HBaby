@@ -51,6 +51,8 @@ dependencies:
   path: ^1.9.1
   shared_preferences: ^2.5.3
   url_launcher: ^6.3.2
+  flutter_animate: ^4.5.2
+  fl_chart: ^1.2.0
 
 dev_dependencies:
 

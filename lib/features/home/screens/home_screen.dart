@@ -36,6 +36,10 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.monitor_weight_rounded),
             label: l10n.navWeight,
           ),
+          NavigationDestination(
+            icon: const Icon(Icons.insights_rounded),
+            label: l10n.navStats,
+          ),
         ],
       ),
     );

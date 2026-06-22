@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/animations.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/empty_state.dart';
 import '../../../core/utils/l10n_extension.dart';
@@ -310,6 +311,6 @@ class _WeightTile extends StatelessWidget {
           onPressed: onDelete,
         ),
       ),
-    );
+    ).softFade();
   }
 }

@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/settings/settings_provider.dart';
+import '../../../core/utils/animations.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/l10n_extension.dart';
 import '../../../core/widgets/loading_widget.dart';
+import '../../../core/widgets/pressable.dart';
 import '../../../database/app_database.dart';
 import '../../baby/baby_avatar.dart';
 import '../../baby/providers/baby_provider.dart';
@@ -69,26 +71,31 @@ class _DashboardBody extends ConsumerWidget {
     final activeSleep = ref.watch(activeSleepProvider).valueOrNull;
     final l10n = context.l10n;
 
+    final theme = Theme.of(context);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        _BabyHeaderCard(baby: baby),
+        _BabyHeaderCard(baby: baby).entrance(order: 0),
         if (activeSleep != null) ...[
           const SizedBox(height: 16),
-          _ActiveSleepCard(active: activeSleep),
+          _ActiveSleepCard(active: activeSleep).entrance(order: 1),
         ],
         const SizedBox(height: 24),
-        Text(l10n.todaySummary, style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.todaySummary, style: theme.textTheme.titleLarge)
+            .entrance(order: 2),
         const SizedBox(height: 12),
-        const _TodaySummary(),
+        const _TodaySummary().entrance(order: 3),
         const SizedBox(height: 24),
-        Text(l10n.quickActions, style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.quickActions, style: theme.textTheme.titleLarge)
+            .entrance(order: 4),
         const SizedBox(height: 12),
-        const _QuickActions(),
+        const _QuickActions().entrance(order: 5),
         const SizedBox(height: 24),
-        Text(l10n.quickLogTitle, style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.quickLogTitle, style: theme.textTheme.titleLarge)
+            .entrance(order: 6),
         const SizedBox(height: 12),
-        const _QuickLog(),
+        const _QuickLog().entrance(order: 7),
       ],
     );
   }
@@ -157,9 +164,16 @@ class _QuickLog extends ConsumerWidget {
               : Value(settings.defaultFeedingDurationMinutes),
         ),
       );
+      messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.feedingLogged),
+          content: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(l10n.feedingLogged),
+          ),
+          duration: const Duration(seconds: 5),
+          dismissDirection: DismissDirection.down,
           action: SnackBarAction(
             label: l10n.undoLabel,
             onPressed: () => db.feedingsDao.deleteFeeding(id),
@@ -195,9 +209,16 @@ class _QuickLog extends ConsumerWidget {
           endTime: Value(end),
         ),
       );
+      messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.napLogged),
+          content: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: messenger.hideCurrentSnackBar,
+            child: Text(l10n.napLogged),
+          ),
+          duration: const Duration(seconds: 5),
+          dismissDirection: DismissDirection.down,
           action: SnackBarAction(
             label: l10n.undoLabel,
             onPressed: () => db.sleepDao.deleteSleep(id),
@@ -477,7 +498,8 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
+    return Pressable(
+      child: Material(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
@@ -524,6 +546,7 @@ class _SummaryCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -593,7 +616,8 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
+    return Pressable(
+      child: Material(
       color: color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
@@ -615,6 +639,7 @@ class _QuickActionButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

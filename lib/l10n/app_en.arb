@@ -169,5 +169,17 @@
   "quickDefaultsSubtitle": "Values used by the one-tap buttons on the home screen.",
   "defaultFeedingTypeLabel": "Default feeding type",
   "defaultNapDurationLabel": "Default nap duration",
-  "minutesUnit": "min"
+  "minutesUnit": "min",
+
+  "navStats": "Charts",
+  "statsTitle": "Evolution",
+  "statsEmptyTitle": "Nothing to chart yet",
+  "statsEmptySubtitle": "Start logging sleep, feedings and weight to see growth trends here.",
+  "statsNoData": "Not enough data yet",
+  "statsSleepCardTitle": "Sleep",
+  "statsSleepCardSubtitle": "Hours per day · last 14 days",
+  "statsFeedingCardTitle": "Feedings",
+  "statsFeedingCardSubtitle": "Feedings per day · last 14 days",
+  "statsWeightCardTitle": "Weight",
+  "statsWeightCardSubtitle": "Kilograms over time"
 }

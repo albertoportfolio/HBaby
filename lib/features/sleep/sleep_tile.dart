@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/animations.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/l10n_extension.dart';
 import '../../../database/app_database.dart';
@@ -109,6 +110,6 @@ class SleepTile extends StatelessWidget {
           onPressed: onDelete,
         ),
       ),
-    );
+    ).softFade();
   }
 }
