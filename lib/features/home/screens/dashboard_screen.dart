@@ -46,16 +46,21 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: babiesAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text(l10n.errorLabel('$e'))),
-        data: (_) {
-          if (baby == null) {
-            // The router redirects to /babies/add when there are no babies.
-            return const SizedBox.shrink();
-          }
-          return _DashboardBody(baby: baby);
-        },
+      body: GestureDetector(
+        // Dismiss the quick-log "undo" snackbar when tapping anywhere.
+        behavior: HitTestBehavior.translucent,
+        onTap: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        child: babiesAsync.when(
+          loading: () => const LoadingWidget(),
+          error: (e, _) => Center(child: Text(l10n.errorLabel('$e'))),
+          data: (_) {
+            if (baby == null) {
+              // The router redirects to /babies/add when there are no babies.
+              return const SizedBox.shrink();
+            }
+            return _DashboardBody(baby: baby);
+          },
+        ),
       ),
     );
   }
